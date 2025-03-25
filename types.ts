@@ -12,6 +12,9 @@ export interface UserLoginLog {
 	/** Can be 'login' | 'logout' | 'error' */
 	action: string;
 	data?: any;
+	username?: string;
+	ip?: string;
+	email?: string;
 }
 
 export const UserLoginLogKeys = {
@@ -20,6 +23,9 @@ export const UserLoginLogKeys = {
 	'id_user': { type: 'string', priv: false },
 	'action': { type: 'string', priv: false },
 	'data': { type: 'any', priv: false },
+	'username': { type: 'string', priv: false },
+	'ip': { type: 'string', priv: false },
+	'email': { type: 'string', priv: false },
 };
 
 /** UserLoginLogPublic */
@@ -32,6 +38,7 @@ export interface UserLoginLogPublic {
 	data?: any;
 	username?: string;
 	email?: string;
+	ip?: string;
 }
 
 export const UserLoginLogPublicKeys = {
@@ -41,5 +48,6 @@ export const UserLoginLogPublicKeys = {
 	'data': { type: 'any', priv: false },
 	'username': { type: 'string', priv: false },
 	'email': { type: 'string', priv: false },
+	'ip': { type: 'string', priv: false },
 };
 

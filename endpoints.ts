@@ -21,7 +21,7 @@ import {
 } from './types';
 
 /*=== f2c_start __header ===*/
-
+import { userlogin_db_init } from './methods';
 /*=== f2c_end __header ===*/
 
 export const init = ( liwe: ILiWE ) => {
