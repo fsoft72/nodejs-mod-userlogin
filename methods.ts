@@ -4,6 +4,7 @@
  */
 
 import { ILRequest, ILResponse, LCback, ILiweConfig, ILError, ILiWE } from '../../liwe/types';
+import { LiWEResponse, responseError, responseSuccess } from '../../liwe/response';
 import { $l } from '../../liwe/locale';
 import { system_permissions_register } from '../system/methods';
 
@@ -47,7 +48,7 @@ const _log_line = async ( req: ILRequest, data: any ) => {
 };
 /*=== f2c_end __file_header ===*/
 
-// {{{ get_userlogin_list ( req: ILRequest, action?: string, rows: number = 20, skip: number = 0, cback: LCBack = null ): Promise<UserLoginLogPublic[]>
+// {{{ get_userlogin_list ( req: ILRequest, action?: string, rows: number = 20, skip: number = 0cback: LCBack = null ): Promise<UserLoginLogPublic[]>
 /**
  *
  * @param action -  [opt]
@@ -57,18 +58,16 @@ const _log_line = async ( req: ILRequest, data: any ) => {
  * @return logs: UserLoginLogPublic
  *
  */
-export const get_userlogin_list = ( req: ILRequest, action?: string, rows: number = 20, skip: number = 0, cback: LCback = null ): Promise<UserLoginLogPublic[]> => {
-	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start get_userlogin_list ===*/
-		const logs: UserLoginLogPublic[] = await adb_find_all( req.db, COLL_USER_LOGIN_LOGS, {}, UserLoginLogPublicKeys, {
-			sort: [ { field: "created", desc: 1 } ],
-			skip,
-			rows,
-		} );
-
-		return cback ? cback( req, { ok: true, logs } ) : resolve( logs );
-		/*=== f2c_end get_userlogin_list ===*/
+export const get_userlogin_list = async ( req: ILRequest, action?: string, rows: number = 20, skip: number = 0 ): Promise<LiWEResponse<UserLoginLogPublic[]>> => {
+	/*=== f2c_start get_userlogin_list ===*/
+	const logs: UserLoginLogPublic[] = await adb_find_all( req.db, COLL_USER_LOGIN_LOGS, {}, UserLoginLogPublicKeys, {
+		sort: [ { field: "created", desc: 1 } ],
+		skip,
+		rows,
 	} );
+
+	return responseSuccess( logs );
+	/*=== f2c_end get_userlogin_list ===*/
 };
 // }}}
 
@@ -79,16 +78,16 @@ export const get_userlogin_list = ( req: ILRequest, action?: string, rows: numbe
  * @return ok: boolean
  *
  */
-export const get_userlogin_clear = ( req: ILRequest, cback: LCback = null ): Promise<boolean> => {
-	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start get_userlogin_clear ===*/
+export const get_userlogin_clear = async ( req: ILRequest, ): Promise<LiWEResponse<boolean>> => {
+	/*=== f2c_start get_userlogin_clear ===*/
+	await adb_del_all( req.db, COLL_USER_LOGIN_LOGS, {} );
 
-		/*=== f2c_end get_userlogin_clear ===*/
-	} );
+	return responseSuccess( true );
+	/*=== f2c_end get_userlogin_clear ===*/
 };
 // }}}
 
-// {{{ delete_userlogin_del ( req: ILRequest, id: string, cback: LCBack = null ): Promise<boolean>
+// {{{ delete_userlogin_del ( req: ILRequest, id: stringcback: LCBack = null ): Promise<boolean>
 /**
  *
  * @param id - UserLoginLog ID to be removed [req]
@@ -96,14 +95,12 @@ export const get_userlogin_clear = ( req: ILRequest, cback: LCback = null ): Pro
  * @return ok: boolean
  *
  */
-export const delete_userlogin_del = ( req: ILRequest, id: string, cback: LCback = null ): Promise<boolean> => {
-	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start delete_userlogin_del ===*/
-		await adb_del_one( req.db, COLL_USER_LOGIN_LOGS, { id } );
+export const delete_userlogin_del = async ( req: ILRequest, id: string ): Promise<LiWEResponse<boolean>> => {
+	/*=== f2c_start delete_userlogin_del ===*/
+	await adb_del_one( req.db, COLL_USER_LOGIN_LOGS, { id } );
 
-		return cback ? cback( req, { ok: true } ) : resolve( true );
-		/*=== f2c_end delete_userlogin_del ===*/
-	} );
+	return responseSuccess( true );
+	/*=== f2c_end delete_userlogin_del ===*/
 };
 // }}}
 
@@ -117,25 +114,25 @@ export const delete_userlogin_del = ( req: ILRequest, id: string, cback: LCback 
  * @return : boolean
  *
  */
-export const userlogin_db_init = ( liwe: ILiWE, cback: LCback = null ): Promise<boolean> => {
-	return new Promise( async ( resolve, reject ) => {
-		_liwe = liwe;
+export const userlogin_db_init = async ( liwe: ILiWE, cback: LCback = null ): Promise<boolean> => {
+	_liwe = liwe;
 
-		system_permissions_register( 'userlogin', _module_perms );
+	system_permissions_register( 'userlogin', _module_perms );
 
-		await adb_collection_init( liwe.db, COLL_USER_LOGIN_LOGS, [
-			{ type: "persistent", fields: [ "id" ], unique: true },
-			{ type: "persistent", fields: [ "domain" ], unique: false },
-			{ type: "persistent", fields: [ "id_user" ], unique: false },
-			{ type: "persistent", fields: [ "action" ], unique: false },
-		], { drop: false } );
+	await adb_collection_init( liwe.db, COLL_USER_LOGIN_LOGS, [
+		{ type: "persistent", fields: [ "id" ], unique: true },
+		{ type: "persistent", fields: [ "domain" ], unique: false },
+		{ type: "persistent", fields: [ "id_user" ], unique: false },
+		{ type: "persistent", fields: [ "action" ], unique: false },
+	], { drop: false } );
 
-		/*=== f2c_start userlogin_db_init ===*/
-		liwe_event_register( 'user', USER_EVENT_LOGIN, _log_line );
-		liwe_event_register( 'user', USER_EVENT_LOGOUT, _log_line );
-		liwe_event_register( 'user', USER_EVENT_LOGIN_TRY, _log_line );
-		/*=== f2c_end userlogin_db_init ===*/
-	} );
+	/*=== f2c_start userlogin_db_init ===*/
+	liwe_event_register( 'user', USER_EVENT_LOGIN, _log_line );
+	liwe_event_register( 'user', USER_EVENT_LOGOUT, _log_line );
+	liwe_event_register( 'user', USER_EVENT_LOGIN_TRY, _log_line );
+	/*=== f2c_end userlogin_db_init ===*/
+
+	return true;
 };
 // }}}
 

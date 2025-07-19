@@ -8,6 +8,7 @@ import { send_error, send_ok, typed_dict } from "../../liwe/utils";
 import { locale_load } from '../../liwe/locale';
 
 import { perms } from '../../liwe/auth';
+import { LiWEResponse, sendParametersError, sendResponse } from '../../liwe/response';
 
 import {
 	// endpoints function
@@ -32,47 +33,35 @@ export const init = ( liwe: ILiWE ) => {
 	liwe.cfg.app.languages.map( ( l ) => locale_load( "userlogin", l ) );
 	userlogin_db_init ( liwe );
 
-	app.get ( '/api/userlogin/list', perms( [ "userlogin.list" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/userlogin/list', perms( [ "userlogin.list" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { action, rows, skip, ___errors } = typed_dict( req.query as any, [
 			{ name: "action", type: "string" },
 			{ name: "rows", type: "number" },
 			{ name: "skip", type: "number" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		get_userlogin_list ( req, action, rows, skip, ( err: ILError, logs: UserLoginLogPublic ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { logs } );
-		} );
+		const response = await get_userlogin_list ( req, action, rows, skip);
+		sendResponse ( res, response );
 	} );
 
-	app.get ( '/api/userlogin/clear', perms( [ "userlogin.clear" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/userlogin/clear', perms( [ "userlogin.clear" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		
 
-		get_userlogin_clear ( req, ( err: ILError, ok: boolean ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { ok } );
-		} );
+		const response = await get_userlogin_clear ( req, );
+		sendResponse ( res, response );
 	} );
 
-	app.delete ( '/api/userlogin/del', perms( [ "userlogin.clear" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.delete ( '/api/userlogin/del', perms( [ "userlogin.clear" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { id, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		delete_userlogin_del ( req, id, ( err: ILError, ok: boolean ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { ok } );
-		} );
+		const response = await delete_userlogin_del ( req, id);
+		sendResponse ( res, response );
 	} );
 
 };
